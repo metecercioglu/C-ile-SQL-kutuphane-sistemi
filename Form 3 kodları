@@ -1,0 +1,130 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.SqlClient;
+
+namespace KutuphaneSistemii
+{
+    public partial class Form3 : Form
+    {
+        public Form3()
+        {
+            InitializeComponent();
+            lbkitaplar.Sorted = true;
+        }
+        private int sonIndex = -1; // Son bulunan indeksi saklamak için bir değişken
+        SqlConnection baglanti = new SqlConnection("Data Source=METE\\SQLEXPRESS;Initial Catalog=loginekrani;Integrated Security=True");
+
+        private void btnYazarKitapAdiAda_Click(object sender, EventArgs e)
+        {
+            string arananMetin = txtYazarKitapAdiAra.Text.ToLower();
+
+            int baslangicIndex = 0; // Aramaya listedeki ilk öğeden başla
+
+            if (sonIndex != -1)
+            {
+                baslangicIndex = sonIndex + 1; // Son bulunan öğeden sonraki öğeden başla
+                if (baslangicIndex >= lbkitaplar.Items.Count)
+                    baslangicIndex = 0; // Listenin sonuna gelindiğinde başa dön
+            }
+
+            // Listedeki her bir öğeyi kontrol et
+            for (int i = baslangicIndex; i < lbkitaplar.Items.Count; i++)
+            {
+                // Öğenin metni aranan metni içeriyorsa
+                if (lbkitaplar.Items[i].ToString().ToLower().Contains(arananMetin))
+                {
+                    // Eşleşen öğeyi seç ve listede görünür yap
+                    lbkitaplar.SelectedIndex = i;
+                    lbkitaplar.TopIndex = i;
+                    sonIndex = i; // Son bulunan indeksi güncelle
+                    return; // Eşleşme bulunduğunda aramayı sonlandır
+                }
+
+            }
+
+            sonIndex = -1; // Eşleşme bulunamadığında sonIndex'i sıfırla
+        }
+
+        private void btnSeciliKitabiAl_Click(object sender, EventArgs e)
+        {
+            foreach (var item in lbkitaplar.SelectedItems.Cast<object>().ToList())
+            {
+                lbSeciliKitaplar.Items.Add(item);
+                lbkitaplar.Items.Remove(item);
+            }
+        }
+
+        private void btnSeciliOlaniGeriGonder_Click(object sender, EventArgs e)
+        {
+            foreach (var item in lbSeciliKitaplar.SelectedItems.Cast<object>().ToList())
+            {
+                lbkitaplar.Items.Add(item);
+                lbSeciliKitaplar.Items.Remove(item);
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            
+            // Listbox'taki tüm değerleri al
+            foreach (var item in lbSeciliKitaplar.Items)
+            {
+                string secilenkitap = item.ToString();
+
+                // Her bir değeri yeni tabloya ekle
+                EkleVeritabanina(secilenkitap,_soyad,_tcno);
+            }
+
+            MessageBox.Show("Kitaplar başarılı bir şeklide alındı", "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        private string _soyad;
+        private string _tcno;
+
+        public void VeriAl(string soyad, string tcno)
+        {
+            _soyad = soyad;
+            _tcno = tcno;
+
+            // Gelen verileri kullanarak istediğiniz işlemleri gerçekleştirin
+           
+        }
+
+
+        private void EkleVeritabanina(string secilenkitap, string _soyad, string _tcno)
+        {
+            
+            // Veritabanı bağlantısını aç
+            baglanti.Open();
+
+            // INSERT sorgusunu hazırla
+            string sorgu = "INSERT INTO kitapkayit (alinan_kitap, Alan_kisinin_TelNosu, Alan_kisinin_TCsi) VALUES (@secilenkitap, @alankisininsoyadi, @alankisinintcsi)";
+
+            // SqlCommand nesnesini oluştur ve parametrelerini ekle
+            using (SqlCommand komut = new SqlCommand(sorgu, baglanti))
+            {
+                komut.Parameters.AddWithValue("@secilenkitap", secilenkitap);
+                komut.Parameters.AddWithValue("@alankisininsoyadi", _soyad);
+                komut.Parameters.AddWithValue("@alankisinintcsi", _tcno);
+
+
+                // INSERT sorgusunu çalıştır
+                komut.ExecuteNonQuery();
+            }
+
+            // Veritabanı bağlantısını kapat
+            baglanti.Close();
+        }
+
+        internal void VeriCek()
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
