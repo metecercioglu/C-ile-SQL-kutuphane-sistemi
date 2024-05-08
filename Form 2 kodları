@@ -1,0 +1,133 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.SqlClient;
+
+namespace KutuphaneSistemii
+{
+    public partial class Form2 : Form
+    {
+        public Form2()
+        {
+            InitializeComponent();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+  
+        private void button2_Click(object sender, EventArgs e)
+        {
+
+            Form1 form1 = new Form1();
+          
+            form1.Show();
+            this.Hide();
+
+        }
+
+        private void btnYeniKayit_Click(object sender, EventArgs e)
+        {
+            if ((txtTC.Text.Length != 11) || (txtTelNo.Text.Length != 11) )// TC Kimlik numarası tam olarak 11 hane olmalı.
+            {
+                MessageBox.Show("TC Kimlik Numarası ve Telefon Numarası 11 hane olmak zorundadır. Tekrar deneyiniz.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);           
+                return; // Eğer TC Kimlik Numarası 11 hane değilse, işleme devam etme.
+            }
+
+            // Veritabanı kayıt işlemini burada yap
+            string firstName = txtadi.Text;
+            string lastName = txtSoyadi.Text;
+            string identityNumber = txtTC.Text;
+            string phoneNumber = txtTelNo.Text;
+
+            VeritabaninaKayit veritabanikayit = new VeritabaninaKayit();
+            veritabanikayit.YeniKayitEkle(firstName, lastName, identityNumber, phoneNumber);
+        }
+
+        public class VeritabaninaKayit
+        {
+            public void YeniKayitEkle(string firstName, string lastName, string identityNumber, string phoneNumber)
+            {
+                using (SqlConnection connection = new SqlConnection("Data Source=METE\\SQLEXPRESS;Initial Catalog=loginekrani;Integrated Security=True"))
+                {
+                    connection.Open();
+                    string query = "INSERT INTO userLogin (Adi, Soyadi, TC_kimlik_No , Telefon_No) VALUES (@FirstName, @LastName, @IdentityNumber, @phoneNumber)";
+
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@FirstName", firstName);
+                        command.Parameters.AddWithValue("@LastName", lastName);
+                        command.Parameters.AddWithValue("@IdentityNumber", identityNumber);
+                        command.Parameters.AddWithValue("@phoneNumber", phoneNumber);
+
+                        int affectedRows = command.ExecuteNonQuery();
+
+                        if (affectedRows > 0)
+                        {
+                            MessageBox.Show("Yeni kayıt başarıyla eklendi.", "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            
+                  
+                        }
+                        else
+                        {
+                            MessageBox.Show("Yeni kayıt eklenirken bir hata oluştu.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private void txtTC_TextChanged(object sender, EventArgs e)
+        {
+            // TC kimlik numarasının uzunluğunu kontrol et
+            if (txtTC.Text.Length > 11)
+            {
+                // Eğer uzunluk 11 karakterden fazlaysa, son karakteri sil
+                txtTC.Text = txtTC.Text.Remove(txtTC.Text.Length - 1);
+                // İlgili metni seç
+                txtTC.Select(txtTC.Text.Length, 0);
+            }
+        }
+
+        private void txtTC_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // Eğer basılan tuş sayı değilse ve geri alma, kesme gibi işlemler de değilse...
+            if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
+            {
+                // Eğer basılan tuş bir sayı değilse, işlemi iptal et
+                e.Handled = true;
+            }
+
+        }
+
+        private void txtTelNo_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // Eğer basılan tuş sayı değilse ve geri alma, kesme gibi işlemler de değilse...
+            if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
+            {
+                // Eğer basılan tuş bir sayı değilse, işlemi iptal et
+                e.Handled = true;
+            }
+        }
+
+        private void txtTelNo_TextChanged(object sender, EventArgs e)
+        {
+            // TC kimlik numarasının uzunluğunu kontrol et
+            if (txtTelNo.Text.Length > 11)
+            {
+                // Eğer uzunluk 11 karakterden fazlaysa, son karakteri sil
+                txtTelNo.Text = txtTelNo.Text.Remove(txtTelNo.Text.Length - 1);
+                // İlgili metni seç
+                txtTelNo.Select(txtTelNo.Text.Length, 0);
+            }
+        }
+    }
+}
