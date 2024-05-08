@@ -1,0 +1,113 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.SqlClient;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
+
+namespace KutuphaneSistemii
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+      
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+        private bool CheckLogin(string firstName, string lastName, string identityNumber)
+        {
+            using (SqlConnection connection = new SqlConnection("Data Source=METE\\SQLEXPRESS;Initial Catalog=loginekrani;Integrated Security=True"))
+            {
+                connection.Open();
+                string query = "SELECT COUNT(1) FROM userLogin WHERE Adi=@FirstName AND Soyadi=@LastName AND TC_kimlik_no=@IdentityNumber";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@FirstName", firstName);
+                    command.Parameters.AddWithValue("@LastName", lastName);
+                    command.Parameters.AddWithValue("@IdentityNumber", identityNumber);
+
+                    int count = Convert.ToInt32(command.ExecuteScalar());
+                    return count == 1;
+                }
+            }
+        }
+
+        public void VeriCek()
+        {
+            string soyad = txtSoyad.Text.ToLower();
+            string tcno = txtTCno.Text;
+        }
+        private void btnGirisYap_Click(object sender, EventArgs e)
+        {
+            string firstName = txtAd.Text.ToLower();
+            string lastName = txtSoyad.Text.ToLower();
+            string identityNumber = txtTCno.Text;
+
+
+            
+
+            bool isValidUser = CheckLogin(firstName, lastName, identityNumber);
+
+            if (isValidUser)
+            {
+                MessageBox.Show("Giriş başarılı!");
+                Form3 form3 = new Form3();
+                form3.VeriAl(lastName, identityNumber);
+                form3.Show();
+                this.Hide();
+            } 
+
+
+            else
+            {
+                MessageBox.Show("Giriş başarısız. Lütfen bilgilerinizi kontrol edin.");
+            }
+           
+
+    }
+
+        private void btnForm2Gecis_Click(object sender, EventArgs e)
+        {
+            // Form2'yi oluştur
+            Form2 form2 = new Form2();
+
+            // Form2'yi göster
+            form2.Show();
+
+            this.Hide();
+        }
+
+        private void txtTCno_TextChanged(object sender, EventArgs e)
+        {
+            // TC kimlik numarasının uzunluğunu kontrol et
+            if (txtTCno.Text.Length > 11)
+            {
+                // Eğer uzunluk 11 karakterden fazlaysa, son karakteri sil
+                txtTCno.Text = txtTCno.Text.Remove(txtTCno.Text.Length - 1);
+                // İlgili metni seç
+                txtTCno.Select(txtTCno.Text.Length, 0);
+            }
+        }
+
+        private void txtTCno_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // Eğer basılan tuş sayı değilse ve geri alma, kesme gibi işlemler de değilse...
+            if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
+            {
+                // Eğer basılan tuş bir sayı değilse, işlemi iptal et
+                e.Handled = true;
+            }
+        }
+    }
+}
